@@ -125,7 +125,7 @@
     });
 
     const googleDriveFileId = "14s-MJqNfQL93F1vjzUzhgxK3wd1AGJxm";
-    fetch(`http://localhost:3000/api/file?id=${googleDriveFileId}`)
+    fetch(`https://guitar-pro-demo.onrender.com/api/file?id=${googleDriveFileId}`)
       .then(res => {
         if (!res.ok) throw new Error("Fetch failed");
         return res.arrayBuffer();
