@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Guitar Pro Player – Page 1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/alphaTab.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #111;
+      color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #00d1b2;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: auto;
+    }
+
+    #alphaTab {
+      border: 1px solid #444;
+      background: #1e1e1e;
+      height: 500px;
+      overflow: auto;
+      margin-top: 20px;
+    }
+
+    .controls, .nav, .features {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .controls button, .nav button {
+      padding: 10px 20px;
+      border: none;
+      background: #00d1b2;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .controls button:hover, .nav button:hover {
+      background: #00b89c;
+    }
+
+    select, input[type=range] {
+      padding: 6px;
+      border-radius: 4px;
+      border: none;
+    }
+
+    label {
+      margin-right: 5px;
+    }
+
+    .features label {
+      color: #ccc;
+    }
+
+    .slider-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎸 Guitar Pro Player – Page 2</h1>
+    <p>Demo version with advanced playback features</p>
+
+    <div id="alphaTab"></div>
+
+    <div class="controls">
+      <button onclick="api.player.play()">▶ Play</button>
+      <button onclick="api.player.pause()">⏸ Pause</button>
+      <button onclick="api.player.stop()">⏹ Stop</button>
+    </div>
+
+    <div class="features">
+      <div>
+        <label for="trackSelect">🎼 Track:</label>
+        <select id="trackSelect"></select>
+      </div>
+
+      <div class="slider-label">
+        <label for="tempoSlider">⏱ Tempo:</label>
+        <input type="range" id="tempoSlider" min="50" max="200" value="100" />
+        <span id="tempoValue">100%</span>
+      </div>
+
+      <div>
+        <label><input type="checkbox" id="loopToggle" /> 🔁 Loop</label>
+      </div>
+
+      <div>
+        <label><input type="checkbox" id="metronomeToggle" /> 🧭 Metronome</label>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button onclick="location.href='page1.html'">⬅ Back</button>
+      <button onclick="location.href='page3.html'">Next ➡</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/alphaTab.min.js"></script>
+  <script>
+    const container = document.getElementById("alphaTab");
+    const api = new alphaTab.AlphaTabApi(container, {
+      player: {
+        enablePlayer: true,
+        soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/soundfont/sonivox.sf2"
+      }
+    });
+
+    const googleDriveFileId = "1STQ3wNBI53YuphnJscXPspPeKSZtMXcR";
+    fetch(`http://localhost:3000/api/file?id=${googleDriveFileId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Fetch failed");
+        return res.arrayBuffer();
+      })
+      .then(data => api.load(data))
+      .catch(err => {
+        console.error(err);
+        alert("Failed to load the Guitar Pro file from Google Drive.");
+      });
+
+    // Advanced Features
+    api.scoreLoaded.on(score => {
+      const trackSelect = document.getElementById("trackSelect");
+      trackSelect.innerHTML = '';
+      score.tracks.forEach((track, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = track.name || `Track ${i+1}`;
+        trackSelect.appendChild(opt);
+      });
+    });
+
+    document.getElementById("trackSelect").addEventListener("change", e => {
+      api.renderTracks([parseInt(e.target.value)]);
+    });
+
+    document.getElementById("tempoSlider").addEventListener("input", e => {
+      const value = parseInt(e.target.value);
+      document.getElementById("tempoValue").textContent = value + "%";
+      api.player.tempo = value / 100;
+    });
+
+    document.getElementById("loopToggle").addEventListener("change", e => {
+      api.player.isLooping = e.target.checked;
+    });
+
+    document.getElementById("metronomeToggle").addEventListener("change", e => {
+      api.player.enableMetronome = e.target.checked;
+    });
+  </script>
+</body>
+</html>
