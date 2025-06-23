@@ -4,10 +4,7 @@ const app = express();
 const PORT = 3000;
 
 // CORS for local testing
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  next();
-});
+app.use(cors());
 
 // Proxy route to fetch Google Drive file
 app.get("/api/file", async (req, res) => {
