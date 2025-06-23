@@ -1,18 +1,15 @@
 const express = require("express");
-const fetch = require("node-fetch");
-const app = express();
-const PORT = 3000;
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const cors = require("cors");
 
-// CORS for local testing
+const app = express();
+const PORT = process.env.PORT || 3000;  // ✅ Use dynamic port on Render
+
 app.use(cors());
 
-// Proxy route to fetch Google Drive file
 app.get("/api/file", async (req, res) => {
   const fileId = req.query.id;
-  if (!fileId) {
-    return res.status(400).send("Missing file ID");
-  }
+  if (!fileId) return res.status(400).send("Missing file ID");
 
   try {
     const driveUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
@@ -29,5 +26,5 @@ app.get("/api/file", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Proxy server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
