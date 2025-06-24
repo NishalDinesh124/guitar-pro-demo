@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-box,
+    .admin-panel {
+      background: #1e1e1e;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+      width: 90%;
+      max-width: 400px;
+    }
+
+    input,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+    }
+
+    input {
+      background: #333;
+      color: #f4f4f4;
+    }
+
+    button {
+      background-color: #00d1b2;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #00b89c;
+    }
+
+    label {
+      text-align: left;
+      display: block;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-box" id="loginBox">
+    <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="admin-panel" id="adminPanel" style="display:none">
+    <h2>⚙️ Update Page File IDs</h2>
+    <label>Page 1 File ID:</label>
+    <input type="text" id="page1File" placeholder="Google Drive File ID for Page 1" />
+
+    <label>Page 2 File ID:</label>
+    <input type="text" id="page2File" placeholder="Google Drive File ID for Page 2" />
+
+    <label>Page 3 File ID:</label>
+    <input type="text" id="page3File" placeholder="Google Drive File ID for Page 3" />
+
+    <button onclick="saveFileIds()"><i class="fas fa-save"></i> Save</button>
+    <button onclick="logout()" style="background:#ff4d4d"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <button onclick="location.href='index.html'"><i class="fas fa-arrow-left"></i> Go to user page</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBccRH5AgVdSZcteyGda3BOvKm8V1WFkZY",
+      authDomain: "guitar-pro-admin.firebaseapp.com",
+      projectId: "guitar-pro-admin",
+      storageBucket: "guitar-pro-admin.firebasestorage.app",
+      messagingSenderId: "790379804327",
+      appId: "1:790379804327:web:7e7258afac02c7101b8d82",
+      measurementId: "G-EWLBQTSYL3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const docRef = db.collection("settings").doc("fileIds");
+
+    const USERNAME = "admin";
+    const PASSWORD = "12345";
+
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (user === USERNAME && pass === PASSWORD) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminPanel").style.display = "block";
+        loadFileIds();
+      } else {
+        alert("Invalid credentials!");
+      }
+    }
+
+    function loadFileIds() {
+      docRef.get().then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById("page1File").value = data.page1 || "";
+          document.getElementById("page2File").value = data.page2 || "";
+          document.getElementById("page3File").value = data.page3 || "";
+        }
+      }).catch(err => {
+        alert("Failed to load file IDs.");
+        console.error(err);
+      });
+    }
+
+  function saveFileIds() {
+    const fileIds = {
+      page1: document.getElementById("page1File").value,
+      page2: document.getElementById("page2File").value,
+      page3: document.getElementById("page3File").value,
+    };
+
+    docRef.set(fileIds)
+      .then(() => {
+        alert("✅ File IDs saved to Firebase!");
+      })
+      .catch(err => {
+        alert("❌ Failed to save: " + err.message);
+        console.error(err);
+      });
+  }
+
+
+
+
+    function logout() {
+      document.getElementById("loginBox").style.display = "block";
+      document.getElementById("adminPanel").style.display = "none";
+    }
+  </script>
+</body>
+
+</html>

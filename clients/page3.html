@@ -1,10 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <title>Guitar Pro Player – Page 1</title>
+  <title>Guitar Pro Player – Page 3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/alphaTab.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -16,7 +22,6 @@
     }
 
     h1 {
-      margin-bottom: 10px;
       color: #00d1b2;
     }
 
@@ -25,15 +30,49 @@
       margin: auto;
     }
 
+    .loader {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 30px auto;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 5px solid #00d1b2;
+      border-top: 5px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+
     #alphaTab {
       border: 1px solid #444;
       background: #1e1e1e;
       height: 500px;
       overflow: auto;
       margin-top: 20px;
+      position: relative;
     }
 
-    .controls, .nav, .features {
+    .controls,
+    .nav,
+    .features {
       margin-top: 20px;
       display: flex;
       flex-wrap: wrap;
@@ -41,7 +80,7 @@
       gap: 10px;
     }
 
-    .controls button, .nav button {
+    button {
       padding: 10px 20px;
       border: none;
       background: #00d1b2;
@@ -50,11 +89,12 @@
       cursor: pointer;
     }
 
-    .controls button:hover, .nav button:hover {
+    button:hover {
       background: #00b89c;
     }
 
-    select, input[type=range] {
+    select,
+    input[type=range] {
       padding: 6px;
       border-radius: 4px;
       border: none;
@@ -62,9 +102,6 @@
 
     label {
       margin-right: 5px;
-    }
-
-    .features label {
       color: #ccc;
     }
 
@@ -73,81 +110,128 @@
       align-items: center;
       gap: 5px;
     }
+
+    .alphaTab-cursor {
+      background-color: #ff4081 !important;
+      opacity: 1 !important;
+      width: 2px !important;
+      z-index: 100;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>🎸 Guitar Pro Player – Page 3</h1>
     <p>Demo version with advanced playback features</p>
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+    </div>
 
     <div id="alphaTab"></div>
 
     <div class="controls">
-      <button onclick="api.player.play()">▶ Play</button>
-      <button onclick="api.player.pause()">⏸ Pause</button>
-      <button onclick="api.player.stop()">⏹ Stop</button>
+      <button onclick="api.player.play()"><i class="fas fa-play"></i> Play</button>
+      <button onclick="api.player.pause()"><i class="fas fa-pause"></i> Pause</button>
+      <button onclick="api.player.stop()"><i class="fas fa-stop"></i> Stop</button>
+      <button onclick="generatePolishedPdf()"><i class="fas fa-file-pdf"></i> Export Polished PDF</button>
     </div>
 
     <div class="features">
-      <div>
-        <label for="trackSelect">🎼 Track:</label>
-        <select id="trackSelect"></select>
-      </div>
-
+      <div><label for="trackSelect"><i class="fas fa-music"></i> Track:</label><select id="trackSelect"></select></div>
       <div class="slider-label">
-        <label for="tempoSlider">⏱ Tempo:</label>
+        <label for="tempoSlider"><i class="fas fa-tachometer-alt"></i> Tempo:</label>
         <input type="range" id="tempoSlider" min="50" max="200" value="100" />
         <span id="tempoValue">100%</span>
       </div>
-
-      <div>
-        <label><input type="checkbox" id="loopToggle" /> 🔁 Loop</label>
-      </div>
-
-      <div>
-        <label><input type="checkbox" id="metronomeToggle" /> 🧭 Metronome</label>
-      </div>
+      <div><label><input type="checkbox" id="loopToggle" /> <i class="fas fa-sync-alt"></i> Loop</label></div>
+      <div><label><input type="checkbox" id="metronomeToggle" /> <i class="fas fa-compass"></i> Metronome</label></div>
     </div>
 
     <div class="nav">
-      <button onclick="location.href='page2.html'">⬅ Back</button>
-      <button onclick="location.href='index.html'">Next ➡</button>
+      <button onclick="location.href='page2.html'"><i class="fas fa-arrow-left"></i> Back</button>
+      <button onclick="location.href='index.html'"><i class="fas fa-arrow-right"></i> Next</button>
+      <button onclick="location.href='admin.html'">
+        <i class="fas fa-user-shield"></i> Admin Panel
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/alphaTab.min.js"></script>
   <script>
+    /// === Firebase configuration (Replacable credentials) === ///
+    const firebaseConfig = {
+      apiKey: "AIzaSyBccRH5AgVdSZcteyGda3BOvKm8V1WFkZY",
+      authDomain: "guitar-pro-admin.firebaseapp.com",
+      projectId: "guitar-pro-admin",
+      storageBucket: "guitar-pro-admin.firebasestorage.app",
+      messagingSenderId: "790379804327",
+      appId: "1:790379804327:web:7e7258afac02c7101b8d82",
+      measurementId: "G-EWLBQTSYL3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const loader = document.getElementById("loader");
     const container = document.getElementById("alphaTab");
     const api = new alphaTab.AlphaTabApi(container, {
       player: {
         enablePlayer: true,
-        soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/soundfont/sonivox.sf2"
+        soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/soundfont/sonivox.sf2",
+        enableMetronome: false,
+        enableLooping: false
+      },
+      display: {
+        layoutMode: 'page',
+        stretchToMargin: true,
+        renderSingleTrack: false,
+        autoScroll: true,
+        followPlayback: true,
+        showCursor: true,
+        scale: 1.0
       }
     });
+    const fallbackId = "1JFZweVhDcn5CWpRTj68vNyVHIfNzBpG9"; // optional
+    const googleDriveFileId = localStorage.getItem("page3FileId") || fallbackId;
 
-    const googleDriveFileId = "1JFZweVhDcn5CWpRTj68vNyVHIfNzBpG9";
-    fetch(`https://guitar-pro-demo.onrender.com/api/file?id=${googleDriveFileId}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Fetch failed");
-        return res.arrayBuffer();
+    db.collection("settings").doc("fileIds").get()
+      .then(doc => {
+        const googleDriveFileId = doc.data().page3;
+        return fetch(`https://guitar-pro-demo.onrender.com/api/file?id=${googleDriveFileId}`);
       })
+      .then(res => res.arrayBuffer())
       .then(data => api.load(data))
       .catch(err => {
         console.error(err);
-        alert("Failed to load the Guitar Pro file from Google Drive.");
+        alert("Failed to load the Guitar Pro file.");
+        loader.classList.add("hidden");
       });
 
-    // Advanced Features
     api.scoreLoaded.on(score => {
+      loader.classList.add("hidden");
+      container.classList.remove("hidden");
       const trackSelect = document.getElementById("trackSelect");
       trackSelect.innerHTML = '';
       score.tracks.forEach((track, i) => {
         const opt = document.createElement("option");
         opt.value = i;
-        opt.textContent = track.name || `Track ${i+1}`;
+        opt.textContent = track.name || `Track ${i + 1}`;
         trackSelect.appendChild(opt);
       });
+
+      // Wait for render finish, then scroll to top to ensure visibility
+      api.renderFinished.on(() => {
+        container.scrollTop = 0;
+      });
     });
+
+
+    api.playerPositionChanged.on(position => {
+      if (position.beat) {
+        api.updateCursor(position);
+      }
+    });
+
 
     document.getElementById("trackSelect").addEventListener("change", e => {
       api.renderTracks([parseInt(e.target.value)]);
@@ -166,6 +250,37 @@
     document.getElementById("metronomeToggle").addEventListener("change", e => {
       api.player.enableMetronome = e.target.checked;
     });
+
+    async function generatePolishedPdf() {
+      const { jsPDF } = window.jspdf;
+      const container = document.getElementById("alphaTab");
+      const totalHeight = container.scrollHeight;
+      const viewportHeight = container.clientHeight;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let capturedImages = [];
+
+      for (let scrollY = 0; scrollY < totalHeight; scrollY += viewportHeight) {
+        container.scrollTop = scrollY;
+        await new Promise(res => setTimeout(res, 600));
+        const canvas = await html2canvas(container, { scale: 3, useCORS: true });
+        capturedImages.push(canvas.toDataURL("image/png"));
+      }
+
+      capturedImages.forEach((img, i) => {
+        if (i > 0) pdf.addPage();
+        const imgProps = pdf.getImageProperties(img);
+        const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+        pdf.addImage(img, "PNG", 0, 0, pageWidth, imgHeight);
+        pdf.setFontSize(22);
+        pdf.setTextColor(150);
+        pdf.text("Demo Version - NDMedia", pageWidth / 2, pageHeight - 20, { align: "center" });
+      });
+
+      pdf.save("guitar-tab-page3.pdf");
+    }
   </script>
 </body>
+
 </html>
