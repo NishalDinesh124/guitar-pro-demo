@@ -260,6 +260,9 @@
       <button onclick="api.player.pause()"><i class="fas fa-pause"></i> Pause</button>
       <button onclick="api.player.stop()"><i class="fas fa-stop"></i> Stop</button>
       <button onclick="generatePolishedPdf()"><i class="fas fa-file-pdf"></i> Export Polished PDF</button>
+       <button onclick="printWithoutWatermark()">
+        <i class="fas fa-print"></i> Print Without Watermark
+      </button>
     </div>
 
     <div class="features">
@@ -431,6 +434,11 @@
       pdf.save("guitar-tab-polished.pdf");
       pdfOverlay.classList.add("hidden");
     }
+
+    /// === Print feature without watermark === ///
+    function printWithoutWatermark() {
+  api.print();
+}
   </script>
 </body>
 

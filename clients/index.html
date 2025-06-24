@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Guitar Pro Player – Page 1</title>
@@ -106,17 +107,23 @@
     }
 
     .spinner {
-  width: 40px;
-  height: 40px;
-  border: 5px solid #00d1b2;
-  border-top: 5px solid transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+      width: 40px;
+      height: 40px;
+      border: 5px solid #00d1b2;
+      border-top: 5px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
 
 
     .hidden {
@@ -181,42 +188,42 @@
       background: #fff;
       color: #000;
     }
+
     /* Responsive adjustments */
-@media (max-width: 1433px) {
-  .at-sidebar {
-    position: relative;
-    top: 0;
-    left: 0;
-    margin-top: 15px;
-    max-width: 100%;
-    border: none;
-    background: transparent;
-    display: flex;
-    justify-content: center;
-  }
+    @media (max-width: 1433px) {
+      .at-sidebar {
+        position: relative;
+        top: 0;
+        left: 0;
+        margin-top: 15px;
+        max-width: 100%;
+        border: none;
+        background: transparent;
+        display: flex;
+        justify-content: center;
+      }
 
-  .at-track-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-  }
+      .at-track-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
 
-  .at-track {
-    background: #333;
-    padding: 10px 12px;
-    margin: 5px;
-    border-radius: 6px;
-    min-width: 120px;
-    justify-content: center;
-  }
+      .at-track {
+        background: #333;
+        padding: 10px 12px;
+        margin: 5px;
+        border-radius: 6px;
+        min-width: 120px;
+        justify-content: center;
+      }
 
-  .at-track.active {
-    background: #00d1b2;
-    color: #000;
-  }
-}
-
+      .at-track.active {
+        background: #00d1b2;
+        color: #000;
+      }
+    }
   </style>
 </head>
 
@@ -253,6 +260,10 @@
       <button onclick="api.player.pause()"><i class="fas fa-pause"></i> Pause</button>
       <button onclick="api.player.stop()"><i class="fas fa-stop"></i> Stop</button>
       <button onclick="generatePolishedPdf()"><i class="fas fa-file-pdf"></i> Export Polished PDF</button>
+      <button onclick="printWithoutWatermark()">
+        <i class="fas fa-print"></i> Print Without Watermark
+      </button>
+
     </div>
 
     <div class="features">
@@ -423,6 +434,12 @@
       pdf.save("guitar-tab-polished.pdf");
       pdfOverlay.classList.add("hidden");
     }
+
+/// === Print feature without watermark === ///
+    function printWithoutWatermark() {
+  api.print();
+}
   </script>
 </body>
+
 </html>
