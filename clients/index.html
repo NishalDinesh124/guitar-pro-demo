@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <title>Guitar Pro Player – Page 1</title>
@@ -39,9 +38,7 @@
       position: relative;
     }
 
-    .controls,
-    .nav,
-    .features {
+    .controls, .nav, .features {
       margin-top: 20px;
       display: flex;
       flex-wrap: wrap;
@@ -62,8 +59,7 @@
       background: #00b89c;
     }
 
-    select,
-    input[type=range] {
+    select, input[type=range] {
       padding: 6px;
       border-radius: 4px;
       border: none;
@@ -96,22 +92,38 @@
       animation: spin 1s linear infinite;
     }
 
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
+    .hidden {
+      display: none !important;
     }
 
-    .hidden {
-      display: none;
+    .pdf-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .pdf-spinner {
+      width: 50px;
+      height: 50px;
+      border: 6px solid #00d1b2;
+      border-top: 6px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
-
 <body>
   <div class="container">
     <h1>🎸 Guitar Pro Player – Page 1</h1>
@@ -130,28 +142,38 @@
     </div>
 
     <div class="features">
-      <div><label for="trackSelect"><i class="fas fa-music"></i> Track:</label><select id="trackSelect"></select></div>
+      <div>
+        <label for="trackSelect"><i class="fas fa-music"></i> Track:</label>
+        <select id="trackSelect"></select>
+      </div>
+
       <div class="slider-label">
         <label for="tempoSlider"><i class="fas fa-tachometer-alt"></i> Tempo:</label>
         <input type="range" id="tempoSlider" min="50" max="200" value="100" />
         <span id="tempoValue">100%</span>
       </div>
-      <div><label><input type="checkbox" id="loopToggle" /> <i class="fas fa-sync-alt"></i> Loop</label></div>
-      <div><label><input type="checkbox" id="metronomeToggle" /> <i class="fas fa-compass"></i> Metronome</label></div>
+
+      <div>
+        <label><input type="checkbox" id="loopToggle" /> <i class="fas fa-sync-alt"></i> Loop</label>
+      </div>
+
+      <div>
+        <label><input type="checkbox" id="metronomeToggle" /> <i class="fas fa-compass"></i> Metronome</label>
+      </div>
     </div>
 
     <div class="nav">
       <button onclick="location.href='page2.html'"><i class="fas fa-arrow-right"></i> Next</button>
-      <button onclick="location.href='admin.html'">
-        <i class="fas fa-user-shield"></i> Admin Panel
-      </button>
+      <button onclick="location.href='admin.html'"><i class="fas fa-user-shield"></i> Admin Panel</button>
     </div>
+  </div>
+
+  <div id="pdfOverlay" class="pdf-overlay hidden">
+    <div class="pdf-spinner"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/alphaTab.min.js"></script>
   <script>
-
-    /// === Firebase configuration (Replacable credentials) === ///
     const firebaseConfig = {
       apiKey: "AIzaSyBccRH5AgVdSZcteyGda3BOvKm8V1WFkZY",
       authDomain: "guitar-pro-admin.firebaseapp.com",
@@ -164,9 +186,9 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-
     const loader = document.getElementById("loader");
     const container = document.getElementById("alphaTab");
+    const pdfOverlay = document.getElementById("pdfOverlay");
 
     const api = new alphaTab.AlphaTabApi(container, {
       player: {
@@ -185,12 +207,10 @@
       }
     });
 
-    /// ===Fetching file id's from firestore === ///
-
     db.collection("settings").doc("fileIds").get()
       .then(doc => {
         const googleDriveFileId = doc.data().page1;
-        return fetch(`https://guitar-pro-demo.onrender.com/api/file?id=${googleDriveFileId}`); ///  Fetching from server.js 
+        return fetch(`https://guitar-pro-demo.onrender.com/api/file?id=${googleDriveFileId}`);
       })
       .then(res => res.arrayBuffer())
       .then(data => api.load(data))
@@ -217,21 +237,24 @@
     document.getElementById("trackSelect").addEventListener("change", e => {
       api.renderTracks([parseInt(e.target.value)]);
     });
+
     document.getElementById("tempoSlider").addEventListener("input", e => {
       const value = parseInt(e.target.value);
       document.getElementById("tempoValue").textContent = value + "%";
       api.player.tempo = value / 100;
     });
+
     document.getElementById("loopToggle").addEventListener("change", e => {
       api.player.isLooping = e.target.checked;
     });
+
     document.getElementById("metronomeToggle").addEventListener("change", e => {
       api.player.enableMetronome = e.target.checked;
     });
 
     async function generatePolishedPdf() {
+      pdfOverlay.classList.remove("hidden");
       const { jsPDF } = window.jspdf;
-      const container = document.getElementById("alphaTab");
       const totalHeight = container.scrollHeight;
       const viewportHeight = container.clientHeight;
       const pdf = new jsPDF("p", "mm", "a4");
@@ -257,8 +280,8 @@
       });
 
       pdf.save("guitar-tab-polished.pdf");
+      pdfOverlay.classList.add("hidden");
     }
   </script>
 </body>
-
 </html>

@@ -117,6 +117,30 @@
       width: 2px !important;
       z-index: 100;
     }
+
+    .pdf-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+.pdf-spinner {
+  width: 50px;
+  height: 50px;
+  border: 6px solid #00d1b2;
+  border-top: 6px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.hidden {
+  display: none !important;
+}
   </style>
 </head>
 
@@ -156,6 +180,10 @@
     </div>
   </div>
 
+  <div id="pdfOverlay" class="pdf-overlay hidden">
+  <div class="pdf-spinner"></div>
+</div>
+
   <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/alphaTab.min.js"></script>
   <script>
     /// === Firebase configuration (Replacable credentials) === ///
@@ -174,6 +202,7 @@
 
     const loader = document.getElementById("loader");
     const container = document.getElementById("alphaTab");
+    const pdfOverlay = document.getElementById("pdfOverlay");
     const api = new alphaTab.AlphaTabApi(container, {
       player: {
         enablePlayer: true,
@@ -250,36 +279,37 @@
     document.getElementById("metronomeToggle").addEventListener("change", e => {
       api.player.enableMetronome = e.target.checked;
     });
+async function generatePolishedPdf() {
+  pdfOverlay.classList.remove("hidden");
 
-    async function generatePolishedPdf() {
-      const { jsPDF } = window.jspdf;
-      const container = document.getElementById("alphaTab");
-      const totalHeight = container.scrollHeight;
-      const viewportHeight = container.clientHeight;
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      let capturedImages = [];
+  const { jsPDF } = window.jspdf;
+  const totalHeight = container.scrollHeight;
+  const viewportHeight = container.clientHeight;
+  const pdf = new jsPDF("p", "mm", "a4");
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  let capturedImages = [];
 
-      for (let scrollY = 0; scrollY < totalHeight; scrollY += viewportHeight) {
-        container.scrollTop = scrollY;
-        await new Promise(res => setTimeout(res, 600));
-        const canvas = await html2canvas(container, { scale: 3, useCORS: true });
-        capturedImages.push(canvas.toDataURL("image/png"));
-      }
+  for (let scrollY = 0; scrollY < totalHeight; scrollY += viewportHeight) {
+    container.scrollTop = scrollY;
+    await new Promise(res => setTimeout(res, 600));
+    const canvas = await html2canvas(container, { scale: 1.5, useCORS: true });
+    capturedImages.push(canvas.toDataURL("image/png"));
+  }
 
-      capturedImages.forEach((img, i) => {
-        if (i > 0) pdf.addPage();
-        const imgProps = pdf.getImageProperties(img);
-        const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
-        pdf.addImage(img, "PNG", 0, 0, pageWidth, imgHeight);
-        pdf.setFontSize(22);
-        pdf.setTextColor(150);
-        pdf.text("Demo Version - NDMedia", pageWidth / 2, pageHeight - 20, { align: "center" });
-      });
+  capturedImages.forEach((img, i) => {
+    if (i > 0) pdf.addPage();
+    const imgProps = pdf.getImageProperties(img);
+    const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+    pdf.addImage(img, "PNG", 0, 0, pageWidth, imgHeight);
+    pdf.setFontSize(22);
+    pdf.setTextColor(150);
+    pdf.text("Demo Version - NDMedia", pageWidth / 2, pageHeight - 20, { align: "center" });
+  });
 
-      pdf.save("guitar-tab-page3.pdf");
-    }
+  pdf.save("guitar-tab-page2.pdf");
+  pdfOverlay.classList.add("hidden");
+}
   </script>
 </body>
 
