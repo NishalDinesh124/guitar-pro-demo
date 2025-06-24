@@ -27,6 +27,7 @@
     .container {
       max-width: 960px;
       margin: auto;
+      position: relative;
     }
 
     #alphaTab {
@@ -38,7 +39,27 @@
       position: relative;
     }
 
-    .controls, .nav, .features {
+    .at-cursor-bar {
+      background: rgba(255, 242, 0, 0.25);
+    }
+
+    .at-selection div {
+      background: rgba(64, 64, 255, 0.1);
+    }
+
+    .at-cursor-beat {
+      background: rgba(64, 64, 255, 0.75);
+      width: 3px;
+    }
+
+    .at-highlight * {
+      fill: #0078ff;
+      stroke: #0078ff;
+    }
+
+    .controls,
+    .nav,
+    .features {
       margin-top: 20px;
       display: flex;
       flex-wrap: wrap;
@@ -59,7 +80,8 @@
       background: #00b89c;
     }
 
-    select, input[type=range] {
+    select,
+    input[type=range] {
       padding: 6px;
       border-radius: 4px;
       border: none;
@@ -84,13 +106,18 @@
     }
 
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 5px solid #00d1b2;
-      border-top: 5px solid transparent;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
+  width: 40px;
+  height: 40px;
+  border: 5px solid #00d1b2;
+  border-top: 5px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 
     .hidden {
       display: none !important;
@@ -118,12 +145,81 @@
       animation: spin 1s linear infinite;
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .at-sidebar {
+      position: absolute;
+      top: 90px;
+      left: -220px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      max-width: 200px;
+      padding: 10px;
+      z-index: 10;
     }
+
+    .at-track {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      background: #333;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+
+    .at-track:hover {
+      background: #444;
+    }
+
+    .at-track-icon {
+      margin-right: 8px;
+      color: #00d1b2;
+    }
+
+    .at-track.active {
+      background: #fff;
+      color: #000;
+    }
+    /* Responsive adjustments */
+@media (max-width: 1433px) {
+  .at-sidebar {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin-top: 15px;
+    max-width: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+  }
+
+  .at-track-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .at-track {
+    background: #333;
+    padding: 10px 12px;
+    margin: 5px;
+    border-radius: 6px;
+    min-width: 120px;
+    justify-content: center;
+  }
+
+  .at-track.active {
+    background: #00d1b2;
+    color: #000;
+  }
+}
+
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>🎸 Guitar Pro Player – Page 1</h1>
@@ -132,7 +228,25 @@
     <div class="loader" id="loader">
       <div class="spinner"></div>
     </div>
+
     <div id="alphaTab" class="hidden"></div>
+
+    <!-- Track Sidebar -->
+    <div class="at-sidebar">
+      <div class="at-sidebar-content">
+        <div class="at-track-list"></div>
+      </div>
+    </div>
+
+    <!-- Track Template -->
+    <template id="at-track-template">
+      <div class="at-track">
+        <div class="at-track-icon"><i class="fas fa-guitar"></i></div>
+        <div class="at-track-details">
+          <div class="at-track-name"></div>
+        </div>
+      </div>
+    </template>
 
     <div class="controls">
       <button onclick="api.player.play()"><i class="fas fa-play"></i> Play</button>
@@ -142,21 +256,18 @@
     </div>
 
     <div class="features">
-      <div>
+      <!-- <div>
         <label for="trackSelect"><i class="fas fa-music"></i> Track:</label>
         <select id="trackSelect"></select>
-      </div>
-
+      </div> -->
       <div class="slider-label">
         <label for="tempoSlider"><i class="fas fa-tachometer-alt"></i> Tempo:</label>
         <input type="range" id="tempoSlider" min="50" max="200" value="100" />
         <span id="tempoValue">100%</span>
       </div>
-
       <div>
         <label><input type="checkbox" id="loopToggle" /> <i class="fas fa-sync-alt"></i> Loop</label>
       </div>
-
       <div>
         <label><input type="checkbox" id="metronomeToggle" /> <i class="fas fa-compass"></i> Metronome</label>
       </div>
@@ -193,16 +304,18 @@
     const api = new alphaTab.AlphaTabApi(container, {
       player: {
         enablePlayer: true,
+        enableCursor: true,
         soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/soundfont/sonivox.sf2",
-        enableMetronome: false,
-        enableLooping: false
+        enableMetronome: true,
+        enableLooping: true
       },
       display: {
         layoutMode: 'page',
         stretchToMargin: true,
         renderSingleTrack: false,
-        autoScroll: false,
-        followPlayback: false,
+        autoScroll: true,
+        followPlayback: true,
+        showCursor: true,
         scale: 1.0
       }
     });
@@ -220,22 +333,48 @@
         loader.classList.add("hidden");
       });
 
+    // document.getElementById("trackSelect").addEventListener("change", e => {
+    //   api.renderTracks([parseInt(e.target.value)]);
+    // });
+
     api.scoreLoaded.on(score => {
-      const trackSelect = document.getElementById("trackSelect");
-      trackSelect.innerHTML = '';
-      score.tracks.forEach((track, i) => {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = track.name || `Track ${i + 1}`;
-        trackSelect.appendChild(opt);
+      // const trackSelect = document.getElementById("trackSelect");
+      // trackSelect.innerHTML = '';
+      // score.tracks.forEach((track, i) => {
+      //   const opt = document.createElement("option");
+      //   opt.value = i;
+      //   opt.textContent = track.name || `Track ${i + 1}`;
+      //   trackSelect.appendChild(opt);
+      // });
+
+      // Sidebar Track UI
+      const trackList = document.querySelector(".at-track-list");
+      trackList.innerHTML = '';
+      score.tracks.forEach((track) => {
+        const item = document.querySelector("#at-track-template").content.cloneNode(true).firstElementChild;
+        item.querySelector(".at-track-name").innerText = track.name;
+        item.track = track;
+        item.onclick = () => api.renderTracks([track]);
+        trackList.appendChild(item);
       });
+
+      api.player.metronomeVolume = 0;
+      api.updateSettings();
       loader.classList.add("hidden");
       container.classList.remove("hidden");
       api.render();
     });
 
-    document.getElementById("trackSelect").addEventListener("change", e => {
-      api.renderTracks([parseInt(e.target.value)]);
+    api.renderStarted.on(() => {
+      const tracks = new Map();
+      api.tracks.forEach(t => tracks.set(t.index, t));
+      document.querySelectorAll(".at-track").forEach(item => {
+        if (tracks.has(item.track.index)) {
+          item.classList.add("active");
+        } else {
+          item.classList.remove("active");
+        }
+      });
     });
 
     document.getElementById("tempoSlider").addEventListener("input", e => {
@@ -250,6 +389,8 @@
 
     document.getElementById("metronomeToggle").addEventListener("change", e => {
       api.player.enableMetronome = e.target.checked;
+      api.player.metronomeVolume = e.target.checked ? 1 : 0;
+      api.updateSettings();
     });
 
     async function generatePolishedPdf() {
