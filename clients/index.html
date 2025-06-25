@@ -31,17 +31,16 @@
       position: relative;
     }
 
-    #alphaTab {
+    .at-viewport {
       border: 1px solid #444;
-      background: #1e1e1e;
       height: 500px;
       overflow: auto;
-      margin-top: 20px;
       position: relative;
+      background: #1e1e1e;
     }
 
     .at-cursor-bar {
-      background: rgba(255, 242, 0, 0.25);
+      background: rgba(255, 242, 0, 0.116);
     }
 
     .at-selection div {
@@ -49,7 +48,7 @@
     }
 
     .at-cursor-beat {
-      background: rgba(64, 64, 255, 0.75);
+      background: rgba(227, 243, 7, 0.904);
       width: 3px;
     }
 
@@ -236,7 +235,10 @@
       <div class="spinner"></div>
     </div>
 
-    <div id="alphaTab" class="hidden"></div>
+    <div class="at-viewport">
+      <div id="alphaTab" class="hidden"></div>
+    </div>
+
 
     <!-- Track Sidebar -->
     <div class="at-sidebar">
@@ -256,6 +258,9 @@
     </template>
 
     <div class="controls">
+      <div id="timeDisplay" style="margin-top: 10px; font-size: 14px; color: #aaa;">
+        00:00 / 00:00
+      </div>
       <button onclick="api.player.play()"><i class="fas fa-play"></i> Play</button>
       <button onclick="api.player.pause()"><i class="fas fa-pause"></i> Pause</button>
       <button onclick="api.player.stop()"><i class="fas fa-stop"></i> Stop</button>
@@ -312,16 +317,17 @@
     const container = document.getElementById("alphaTab");
     const pdfOverlay = document.getElementById("pdfOverlay");
 
-    const api = new alphaTab.AlphaTabApi(container, {
+    const settings = {
       player: {
         enablePlayer: true,
         enableCursor: true,
-        soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/soundfont/sonivox.sf2",
         enableMetronome: true,
-        enableLooping: true
+        enableLooping: true,
+        soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.0/dist/soundfont/sonivox.sf2",
+        scrollElement: document.querySelector('.at-viewport') // this is key
       },
       display: {
-        layoutMode: 'page',
+        layoutMode: 'page', // required for auto scroll to work
         stretchToMargin: true,
         renderSingleTrack: false,
         autoScroll: true,
@@ -329,7 +335,32 @@
         showCursor: true,
         scale: 1.0
       }
+    };
+
+    const api = new alphaTab.AlphaTabApi(document.getElementById("alphaTab"), settings);
+
+
+    api.playerPositionChanged.on((e) => {
+      // Auto-scroll to the cursor on every player position update
+      api.scrollToCursor();
     });
+    function formatTime(ms) {
+      const minutes = Math.floor(ms / 60000);
+      const seconds = Math.floor((ms % 60000) / 1000);
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    api.playerPositionChanged.on(e => {
+      // Auto-scroll
+      api.scrollToCursor();
+
+      // Update time display
+      const timeDisplay = document.getElementById("timeDisplay");
+      if (timeDisplay) {
+        timeDisplay.textContent = `${formatTime(e.currentTime)} / ${formatTime(e.endTime)}`;
+      }
+    });
+
 
     db.collection("settings").doc("fileIds").get()
       .then(doc => {
@@ -435,10 +466,10 @@
       pdfOverlay.classList.add("hidden");
     }
 
-/// === Print feature without watermark === ///
+    /// === Print feature without watermark === ///
     function printWithoutWatermark() {
-  api.print();
-}
+      api.print();
+    }
   </script>
 </body>
 
